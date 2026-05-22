@@ -9,13 +9,13 @@
 <title>Carte de Turbidité de la Rivière Bagoué</title>
 
 <link rel="stylesheet" href="leaflet.css">
-<link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
-<link rel="stylesheet" href="css/L.Control.Locate.min.css">
-<link rel="stylesheet" href="css/qgis2web.css">
-<link rel="stylesheet" href="css/fontawesome-all.min.css">
-<link rel="stylesheet" href="css/leaflet-search.css">
-<link rel="stylesheet" href="css/leaflet.photon.css">
-<link rel="stylesheet" href="css/leaflet-measure.css">
+<link rel="stylesheet" href="L.Control.Layers.Tree.css">
+<link rel="stylesheet" href="L.Control.Locate.min.css">
+<link rel="stylesheet" href="qgis2web.css">
+<link rel="stylesheet" href="fontawesome-all.min.css">
+<link rel="stylesheet" href="leaflet-search.css">
+<link rel="stylesheet" href="leaflet.photon.css">
+<link rel="stylesheet" href="leaflet-measure.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
@@ -71,45 +71,11 @@ html,body{height:100%;width:100%;font-family:var(--font);background:var(--dark);
 .rp-row input[type=checkbox]{appearance:none;width:14px;height:14px;border:1.5px solid var(--border2);border-radius:3px;background:transparent;cursor:pointer;flex-shrink:0;position:relative;transition:all .12s;}
 .rp-row input[type=checkbox]:checked{background:var(--gold);border-color:var(--gold)}
 .rp-row input[type=checkbox]:checked::after{content:'';position:absolute;left:2px;top:0;width:6px;height:9px;border:1.5px solid var(--dark);border-top:none;border-left:none;transform:rotate(42deg);}
-..rp-dot{
-display:flex;
-align-items:center;
-justify-content:center;
-flex-shrink:0;
-}
-
-/* Localité = point */
-.rp-dot.localite{
-width:10px;
-height:10px;
-border-radius:50%;
-background:#000;
-border:2px solid #fff;
-}
-
-/* Hydrographie = ligne */
-.rp-dot.hydro{
-width:20px;
-height:4px;
-border-radius:999px;
-background:#38bdf8;
-}
-
-/* Bassin versant = contour polygone */
-.rp-dot.bassin{
-width:18px;
-height:12px;
-background:transparent;
-border:2px solid #444;
-border-radius:3px;
-}
-
-/* Saisons = lignes colorées */
-.rp-dot.saison{
-width:20px;
-height:4px;
-border-radius:999px;
-}
+.rp-dot{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rp-dot.localite{width:10px;height:10px;border-radius:50%;background:#000;border:2px solid #fff;}
+.rp-dot.hydro{width:20px;height:4px;border-radius:999px;background:#38bdf8;}
+.rp-dot.bassin{width:18px;height:12px;background:transparent;border:2px solid #444;border-radius:3px;}
+.rp-dot.saison{width:20px;height:4px;border-radius:999px;}
 .rp-label{font-size:13px;color:#ffffff;font-weight:600;flex:1}
 #toolbar{position:absolute;top:16px;left:16px;z-index:1000;display:flex;flex-direction:column;gap:3px;}
 .tbbtn{width:38px;height:38px;background:rgba(26,20,16,0.92);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:17px;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,0.4);user-select:none;backdrop-filter:blur(8px);}
@@ -136,7 +102,8 @@ border-radius:999px;
 .leaflet-attribution-flag{display:none!important}
 .leaflet-control-attribution{background:rgba(18,14,10,0.85)!important;color:var(--muted)!important;font-size:9px!important;font-family:var(--mono)!important;padding:2px 8px!important;border-radius:5px 0 0 0!important;}
 .leaflet-control-attribution a{color:var(--gold)!important}
-.leaflet-tooltip{background:var(--panel2)!important;border:1px solid var(--border2)!important;border-radius:6px!important;color:var(--tx)!important;font-family:var(--font)!important;font-size:11px!important;font-weight:600!important;padding:4px 10px!important;box-shadow:0 2px 12px rgba(0,0,0,0.5)!important;}.css_LOCALITE_10.leaflet-tooltip{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important;}
+.leaflet-tooltip{background:var(--panel2)!important;border:1px solid var(--border2)!important;border-radius:6px!important;color:var(--tx)!important;font-family:var(--font)!important;font-size:11px!important;font-weight:600!important;padding:4px 10px!important;box-shadow:0 2px 12px rgba(0,0,0,0.5)!important;}
+.css_LOCALITE_10.leaflet-tooltip{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important;}
 .leaflet-tooltip::before{display:none!important}
 @media(max-width:900px){#sidebar{display:none}.h-sub,.h-badges{display:none}#header{min-height:54px}}
 </style>
@@ -248,19 +215,19 @@ border-radius:999px;
 </div>
 
 <script src="qgis2web_expressions.js"></script>
-<script src="js/leaflet.js"></script>
-<script src="js/L.Control.Layers.Tree.min.js"></script>
-<script src="js/L.Control.Locate.min.js"></script>
-<script src="js/leaflet.rotatedMarker.js"></script>
-<script src="js/leaflet.pattern.js"></script>
-<script src="js/leaflet-hash.js"></script>
-<script src="js/Autolinker.min.js"></script>
-<script src="js/rbush.min.js"></script>
-<script src="js/labelgun.min.js"></script>
-<script src="js/labels.js"></script>
-<script src="js/leaflet.photon.js"></script>
-<script src="js/leaflet-measure.js"></script>
-<script src="js/leaflet-search.js"></script>
+<script src="leaflet.js"></script>
+<script src="L.Control.Layers.Tree.min.js"></script>
+<script src="L.Control.Locate.min.js"></script>
+<script src="leaflet.rotatedMarker.js"></script>
+<script src="leaflet.pattern.js"></script>
+<script src="leaflet-hash.js"></script>
+<script src="Autolinker.min.js"></script>
+<script src="rbush.min.js"></script>
+<script src="labelgun.min.js"></script>
+<script src="labels.js"></script>
+<script src="leaflet.photon.js"></script>
+<script src="leaflet-measure.js"></script>
+<script src="leaflet-search.js"></script>
 <script src="BASSIN_1.js"></script>
 <script src="hydrographie_2.js"></script>
 <script src="TURBDITE_SECHE_2016_3.js"></script>
@@ -370,7 +337,7 @@ layer_Sous_prfecture_9.eachLayer(function(layer){
 });
 var j=0;
 layer_LOCALITE_10.eachLayer(function(layer){
-  layer.bindTooltip(layer.feature.properties['LOCALITY_N']!==null?'<div style="color:#1a1410;font-size:9pt;font-weight:700;font-family:\'Montserrat\',sans-serif;background:transparent;padding:2px 4px;border-radius:0;border:none;box-shadow:none;color:#ffffff;text-shadow:1px 1px 3px rgba(0,0,0,0.95),-1px -1px 3px rgba(0,0,0,0.95)">'+layer.feature.properties['LOCALITY_N']+'</div>':'',{permanent:true,offset:[0,-14],className:'css_LOCALITE_10'});
+  layer.bindTooltip(layer.feature.properties['LOCALITY_N']!==null?'<span style="color:#ffffff;font-size:9pt;font-weight:700;font-family:\'Montserrat\',sans-serif;text-shadow:1px 1px 2px #000,-1px -1px 2px #000,1px -1px 2px #000,-1px 1px 2px #000">'+layer.feature.properties['LOCALITY_N']+'</span>':'',{permanent:true,offset:[0,-14],className:'css_LOCALITE_10'});
   labels.push(layer);totalMarkers++;layer.added=true;addLabel(layer,j++);
 });
 

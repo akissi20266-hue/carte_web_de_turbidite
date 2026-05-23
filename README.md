@@ -7,10 +7,9 @@
 
 ## 🤔 C'est quoi cette carte ?
 
-Webmapping de visualisation lde a turbidité des eaux de la Rivière Bagoué à partir d'images satellitaires.
+Il s'agit d'une carte en ligne ( Webmapping) permettant de visualiser la turbidité des eaux de la Rivière Bagoué à partir d'images satellitaires.
 Plus l'eau est chargée en sédiments ou en matières en suspension, plus elle tend vers les teintes chaudes (orange, rouge). 
 À l'inverse, une eau claire présente des teintes froides (bleu, cyan)
-
 
   ## Outil pour :
 - Surveiller la **qualité de l'eau** dans le temps

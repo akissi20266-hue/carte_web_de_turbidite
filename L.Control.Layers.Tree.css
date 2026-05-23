@@ -1,0 +1,102 @@
+/* TYPOGRAPHIE ÉQUILIBRÉE — BAGOUE PRO UI */
+
+.h-title{
+  font-size:20px !important;
+  font-weight:800;
+  letter-spacing:.04em;
+  line-height:1.15;
+}
+
+.h-sub{
+  font-size:11px !important;
+  font-weight:500;
+  letter-spacing:.10em;
+}
+
+.badge{
+  font-size:10px !important;
+}
+
+.sh-label{
+  font-size:12px !important;
+  font-weight:700 !important;
+}
+
+.leg-txt{
+  font-size:14px !important;
+  font-weight:500 !important;
+}
+
+.water-txt{
+  font-size:13px !important;
+}
+
+.water-sub{
+  font-size:10px !important;
+}
+
+.info-k{
+  font-size:13px !important;
+  font-weight:500 !important;
+}
+
+.info-v{
+  font-size:13px !important;
+  font-weight:600 !important;
+}
+
+.sub-lbl{
+  font-size:10px !important;
+}
+
+.fsel{
+  font-size:13px !important;
+  padding:9px 34px 9px 12px !important;
+}
+
+.clr{
+  font-size:11px !important;
+}
+
+.rph-lbl{
+  font-size:13px !important;
+  font-weight:700 !important;
+}
+
+.rpl{
+  font-size:14px !important;
+  font-weight:500 !important;
+}
+
+.rp-group-lbl{
+  font-size:10px !important;
+}
+
+#map-foot{
+  font-size:13px !important;
+}
+
+.si{
+  font-size:11px !important;
+}
+
+.leaflet-popup-content{
+  font-size:14px !important;
+}
+
+.leaflet-tooltip{
+  font-size:12px !important;
+  font-weight:600 !important;
+}
+
+/* Localités */
+.css_LOCALITE_10.leaflet-tooltip{
+  font-size:13px !important;
+  font-weight:700 !important;
+}
+
+/* Sous-préfectures */
+.css_Sous_prfecture_9.leaflet-tooltip{
+  font-size:14px !important;
+  font-weight:700 !important;
+}

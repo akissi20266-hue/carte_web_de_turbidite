@@ -1,3 +1,8 @@
+bash
+
+cat /mnt/user-data/outputs/index.html
+Sortie
+
 <!doctype html>
 <html lang="fr">
 <head>
@@ -76,7 +81,6 @@ html,body{height:100%;width:100%;font-family:var(--font);background:var(--dark);
 .rp-dot.hydro{width:20px;height:4px;border-radius:999px;background:#38bdf8;}
 .rp-dot.bassin{width:18px;height:12px;background:transparent;border:2px solid #444;border-radius:3px;}
 .rp-dot.saison{width:20px;height:4px;border-radius:999px;}
-.rp-label{font-size:13px;color:#ffffff;font-weight:600;flex:1}
 #toolbar{position:absolute;top:16px;left:16px;z-index:1000;display:flex;flex-direction:column;gap:3px;}
 .tbbtn{width:38px;height:38px;background:rgba(26,20,16,0.92);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:17px;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,0.4);user-select:none;backdrop-filter:blur(8px);}
 .tbbtn:hover{background:rgba(201,168,76,0.12);color:var(--gold);border-color:var(--border2)}
@@ -140,6 +144,36 @@ html,body{height:100%;width:100%;font-family:var(--font);background:var(--dark);
       <div class="leg-item"><div class="leg-line" style="background:#f97316"></div><span class="leg-label">Élevée</span></div>
       <div class="leg-item"><div class="leg-line" style="background:#dc2626"></div><span class="leg-label">Très Élevée</span></div>
     </div>
+
+    <!-- ⛏️ SECTION ORPAILLAGE AJOUTÉE -->
+    <div class="sb-section">
+      <div class="sb-head"><span>⛏️</span><span class="sb-head-title">Sites d'Orpaillage</span></div>
+      <div class="leg-item">
+        <div style="width:14px;height:14px;border-radius:3px;background:rgba(220,38,38,0.8);border:1.5px solid #ef4444;flex-shrink:0"></div>
+        <span class="leg-label" style="font-size:12px">Très actif</span>
+      </div>
+      <div class="leg-item">
+        <div style="width:14px;height:14px;border-radius:3px;background:rgba(234,88,12,0.8);border:1.5px solid #f97316;flex-shrink:0"></div>
+        <span class="leg-label" style="font-size:12px">Actifs</span>
+      </div>
+      <div class="leg-item">
+        <div style="width:14px;height:14px;border-radius:3px;background:rgba(234,179,8,0.8);border:1.5px solid #eab308;flex-shrink:0"></div>
+        <span class="leg-label" style="font-size:12px">Partiellement Actif</span>
+      </div>
+      <div class="leg-item">
+        <div style="width:14px;height:14px;border-radius:3px;background:rgba(100,116,139,0.6);border:1.5px solid #94a3b8;flex-shrink:0"></div>
+        <span class="leg-label" style="font-size:12px">Abandonné</span>
+      </div>
+      <div class="sb-label" style="margin-top:10px">Filtrer par statut</div>
+      <select class="sb-select" id="filter-orp" onchange="filterOrpaillage(this.value)">
+        <option value="all">Tous les sites</option>
+        <option value="Très actif">Très actif (4)</option>
+        <option value="Actifs">Actifs (549)</option>
+        <option value="Partiellement Actif">Partiellement Actif (43)</option>
+        <option value="Abandonné">Abandonné (24 064)</option>
+      </select>
+    </div>
+
     <div class="sb-section">
       <div class="sb-head"><span>📊</span><span class="sb-head-title">Informations</span></div>
       <div class="info-row"><span class="info-key">Indice</span><span class="info-val">NDTI</span></div>
@@ -198,6 +232,8 @@ html,body{height:100%;width:100%;font-family:var(--font);background:var(--dark);
         <div class="rp-row"><input type="checkbox" id="cs2016" checked><div class="rp-dot" style="background:#7c3aed"></div><label class="rp-label" for="cs2016">2016 Saison Sèche</label></div>
         <div class="rp-row"><input type="checkbox" id="chydro" checked><div class="rp-dot hydro"></div><label class="rp-label" for="chydro">Hydrographie</label></div>
         <div class="rp-row"><input type="checkbox" id="cbassin" checked><div class="rp-dot bassin"></div><label class="rp-label" for="cbassin">Bassin versant</label></div>
+        <!-- ⛏️ COUCHE ORPAILLAGE AJOUTÉE -->
+        <div class="rp-row"><input type="checkbox" id="corp" checked><div class="rp-dot" style="width:13px;height:13px;border-radius:3px;background:rgba(234,88,12,0.8);border:1.5px solid #f97316;"></div><label class="rp-label" for="corp">Sites d'Orpaillage</label></div>
         <div class="rp-row"><input type="checkbox" id="cosm" checked disabled style="opacity:0.5;cursor:not-allowed"><div class="rp-dot" style="background:#0ea5e9"></div><label class="rp-label" for="cosm">OSM Standard</label></div>
       </div>
     </div>
@@ -239,6 +275,8 @@ html,body{height:100%;width:100%;font-family:var(--font);background:var(--dark);
 <script src="Sous_prfecture_9.js"></script>
 <script src="LOCALITE_10.js"></script>
 <script src="Chef_lieu_sp_11.js"></script>
+<!-- ⛏️ SCRIPT ORPAILLAGE AJOUTÉ -->
+<script src="SITE_ORPAILLAGE_0.js"></script>
 
 <script>
 var BOUNDS=[[10.056401065451533,-6.903393659582564],[10.931165535247988,-5.548619907129459]];
@@ -330,6 +368,80 @@ map.createPane('pane_Chef_lieu_sp_11');map.getPane('pane_Chef_lieu_sp_11').style
 var layer_Chef_lieu_sp_11=new L.geoJson(json_Chef_lieu_sp_11,{attribution:'',interactive:true,dataVar:'json_Chef_lieu_sp_11',layerName:'layer_Chef_lieu_sp_11',pane:'pane_Chef_lieu_sp_11',onEachFeature:pop_Chef_lieu_sp_11,pointToLayer:function(feature,latlng){return L.circleMarker(latlng,style_Chef_lieu_sp_11_0(feature));}});
 bounds_group.addLayer(layer_Chef_lieu_sp_11);map.addLayer(layer_Chef_lieu_sp_11);
 
+// ================================================================
+// ⛏️  COUCHE SITES D'ORPAILLAGE — zIndex 412, par-dessus tout
+// ================================================================
+map.createPane('pane_SITE_ORPAILLAGE_0');
+map.getPane('pane_SITE_ORPAILLAGE_0').style.zIndex = 412;
+map.getPane('pane_SITE_ORPAILLAGE_0').style['mix-blend-mode'] = 'normal';
+
+function getOrpColor(act) {
+  if (act === 'Très actif')          return 'rgba(220,38,38,0.82)';
+  if (act === 'Actifs')              return 'rgba(234,88,12,0.78)';
+  if (act === 'Partiellement Actif') return 'rgba(234,179,8,0.78)';
+  return 'rgba(100,116,139,0.52)';  // Abandonné
+}
+function getOrpBorder(act) {
+  if (act === 'Très actif')          return '#ef4444';
+  if (act === 'Actifs')              return '#f97316';
+  if (act === 'Partiellement Actif') return '#eab308';
+  return '#94a3b8';
+}
+
+function style_SITE_ORPAILLAGE_0(feature) {
+  var act = feature.properties['Act_Pass'];
+  return {
+    pane: 'pane_SITE_ORPAILLAGE_0',
+    opacity: 1,
+    color: getOrpBorder(act),
+    dashArray: '',
+    lineCap: 'round',
+    lineJoin: 'round',
+    weight: 0.8,
+    fill: true,
+    fillOpacity: 0.72,
+    fillColor: getOrpColor(act),
+    interactive: true
+  };
+}
+
+function pop_SITE_ORPAILLAGE_0(feature, layer) {
+  layer.on(handlers(layer));
+  var p = feature.properties;
+  var content = '<table>'
+    + '<tr><td colspan="2">' + (p['LOCALITE'] || 'Site d\'orpaillage') + '</td></tr>'
+    + (p['Act_Pass']  ? '<tr><td style="color:#9e8c6a;padding-right:8px">Statut</td><td style="color:#f0e8d5">' + p['Act_Pass'] + '</td></tr>' : '')
+    + (p['Stru_Site'] ? '<tr><td style="color:#9e8c6a;padding-right:8px">Structure</td><td style="color:#f0e8d5">' + p['Stru_Site'] + '</td></tr>' : '')
+    + (p['FF'] != null ? '<tr><td style="color:#9e8c6a;padding-right:8px">Superficie (ha)</td><td style="color:#f2cb59;font-family:var(--mono)">' + parseFloat(p['FF']).toFixed(4) + '</td></tr>' : '')
+    + (p['Id'] != null ? '<tr><td style="color:#9e8c6a;padding-right:8px">Id</td><td style="color:#f0e8d5">' + p['Id'] + '</td></tr>' : '')
+    + '</table>';
+  bindpop(layer, content);
+}
+
+var layer_SITE_ORPAILLAGE_0 = new L.geoJson(json_SITE_ORPAILLAGE_0, {
+  attribution: '',
+  interactive: true,
+  dataVar: 'json_SITE_ORPAILLAGE_0',
+  layerName: 'layer_SITE_ORPAILLAGE_0',
+  pane: 'pane_SITE_ORPAILLAGE_0',
+  onEachFeature: pop_SITE_ORPAILLAGE_0,
+  style: style_SITE_ORPAILLAGE_0
+});
+bounds_group.addLayer(layer_SITE_ORPAILLAGE_0);
+map.addLayer(layer_SITE_ORPAILLAGE_0);
+
+function filterOrpaillage(val) {
+  layer_SITE_ORPAILLAGE_0.eachLayer(function(l) {
+    var act = l.feature.properties['Act_Pass'];
+    if (val === 'all' || act === val) {
+      l.setStyle(style_SITE_ORPAILLAGE_0(l.feature));
+    } else {
+      l.setStyle({ opacity: 0, fillOpacity: 0 });
+    }
+  });
+}
+// ================================================================
+
 var labels=[],totalMarkers=0,i=0;
 layer_Sous_prfecture_9.eachLayer(function(layer){
   layer.bindTooltip(layer.feature.properties['NOM']!==null?'<div style="color:#ffffff;font-size:10pt;font-family:\'Montserrat\',sans-serif;font-weight:700;text-shadow:1px 1px 2px #000,-1px -1px 2px #000,1px -1px 2px #000,-1px 1px 2px #000">'+layer.feature.properties['NOM']+'</div>':'',{permanent:true,offset:[0,-16],className:'css_Sous_prfecture_9'});
@@ -360,15 +472,43 @@ document.getElementById('btn-zo').addEventListener('click',function(){map.zoomOu
 document.getElementById('btn-rst').addEventListener('click',function(){map.fitBounds(BOUNDS);});
 document.getElementById('btn-loc').addEventListener('click',function(){if(navigator.geolocation)navigator.geolocation.getCurrentPosition(function(p){map.setView([p.coords.latitude,p.coords.longitude],11);});});
 
-var layerMap={'cosm':layer_OSMStandard_0,'cbassin':layer_BASSIN_1,'chydro':layer_hydrographie_2,'cs2016':layer_TURBDITE_SECHE_2016_3,'cs2020':layer_TURBDITE_SECHE_2020_4,'cp2020':layer_TURBDITE_PLUIE_2020_5,'cs2025':layer_TURBDITE_SECHE_2025_6,'cp2025':layer_TURBDITE_PLUIE_2025_7,'cs2026':layer_TURBDITE_SECHE_2026_8,'ccl':layer_Chef_lieu_sp_11};
-Object.keys(layerMap).forEach(function(id){if(id==='cosm')return;var el=document.getElementById(id);if(!el)return;el.addEventListener('change',function(){if(this.checked)map.addLayer(layerMap[id]);else map.removeLayer(layerMap[id]);});});
+var layerMap={
+  'cosm':layer_OSMStandard_0,
+  'cbassin':layer_BASSIN_1,
+  'chydro':layer_hydrographie_2,
+  'cs2016':layer_TURBDITE_SECHE_2016_3,
+  'cs2020':layer_TURBDITE_SECHE_2020_4,
+  'cp2020':layer_TURBDITE_PLUIE_2020_5,
+  'cs2025':layer_TURBDITE_SECHE_2025_6,
+  'cp2025':layer_TURBDITE_PLUIE_2025_7,
+  'cs2026':layer_TURBDITE_SECHE_2026_8,
+  'ccl':layer_Chef_lieu_sp_11,
+  'corp':layer_SITE_ORPAILLAGE_0
+};
+Object.keys(layerMap).forEach(function(id){
+  if(id==='cosm')return;
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.addEventListener('change',function(){
+    if(this.checked) map.addLayer(layerMap[id]);
+    else map.removeLayer(layerMap[id]);
+  });
+});
 
 var seche=['cs2016','cs2020','cs2025','cs2026'],pluie=['cp2020','cp2025'];
 var all2016=['cs2016'],all2020=['cs2020','cp2020'],all2025=['cs2025','cp2025'],all2026=['cs2026'];
 function setVisible(ids,v){ids.forEach(function(id){var el=document.getElementById(id);if(!el)return;el.checked=v;if(v)map.addLayer(layerMap[id]);else map.removeLayer(layerMap[id]);});}
 function filterSeason(v){var yr=document.getElementById('filter-year').value;var allIds=['cs2016','cs2020','cp2020','cs2025','cp2025','cs2026'];if(v==='all'&&yr==='all'){setVisible(allIds,true);return;}allIds.forEach(function(id){var isSec=seche.indexOf(id)>-1;var isPlu=pluie.indexOf(id)>-1;var okS=(v==='all'||(v==='seche'&&isSec)||(v==='pluie'&&isPlu));var okY=true;if(yr!=='all'){var yids={'2016':all2016,'2020':all2020,'2025':all2025,'2026':all2026}[yr]||[];okY=yids.indexOf(id)>-1;}var show=okS&&okY;var el=document.getElementById(id);if(!el)return;el.checked=show;if(show)map.addLayer(layerMap[id]);else map.removeLayer(layerMap[id]);});}
 function filterYear(v){document.getElementById('filter-season').value='all';var allIds=['cs2016','cs2020','cp2020','cs2025','cp2025','cs2026'];if(v==='all'){setVisible(allIds,true);return;}var show={'2016':all2016,'2020':all2020,'2025':all2025,'2026':all2026}[v]||[];allIds.forEach(function(id){var s=show.indexOf(id)>-1;var el=document.getElementById(id);if(!el)return;el.checked=s;if(s)map.addLayer(layerMap[id]);else map.removeLayer(layerMap[id]);});}
-function resetFilters(){document.getElementById('filter-season').value='all';document.getElementById('filter-year').value='all';document.getElementById('filter-sp').value='';filterSeason('all');layer_Sous_prfecture_9.eachLayer(function(l){l.setStyle(style_Sous_prfecture_9_0());});}
+function resetFilters(){
+  document.getElementById('filter-season').value='all';
+  document.getElementById('filter-year').value='all';
+  document.getElementById('filter-sp').value='';
+  document.getElementById('filter-orp').value='all';
+  filterSeason('all');
+  filterOrpaillage('all');
+  layer_Sous_prfecture_9.eachLayer(function(l){l.setStyle(style_Sous_prfecture_9_0());});
+}
 
 map.on('mousemove',function(e){var t=e.latlng.lat.toFixed(4)+'°N  ·  '+e.latlng.lng.toFixed(4)+'°E';document.getElementById('scoords').textContent=t;});
 map.on('zoomend',function(){document.getElementById('szoom').textContent='Zoom '+map.getZoom();});

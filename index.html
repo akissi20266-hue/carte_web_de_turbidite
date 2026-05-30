@@ -1,518 +1,355 @@
-bash
-
-cat /mnt/user-data/outputs/index.html
-Sortie
-
 <!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>Carte de Turbidité de la Rivière Bagoué</title>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet.photon.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        #map {
+            width: 669px;
+            height: 483px;
+        }
+        </style>
+        <title>CARTE DE TURBIDITE DE LA RIVIERE BAGOUE</title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.photon.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="data/SITE_ORPAILLAGE_0.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
 
-<link rel="stylesheet" href="leaflet.css">
-<link rel="stylesheet" href="L.Control.Layers.Tree.css">
-<link rel="stylesheet" href="L.Control.Locate.min.css">
-<link rel="stylesheet" href="qgis2web.css">
-<link rel="stylesheet" href="fontawesome-all.min.css">
-<link rel="stylesheet" href="leaflet-search.css">
-<link rel="stylesheet" href="leaflet.photon.css">
-<link rel="stylesheet" href="leaflet-measure.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: 'rgba(255, 255, 0, 1.00)',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: 'rgba(255, 255, 0, 1.00)',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:12, minZoom:1
+        }).fitBounds([[10.140473263330955,-6.812800223439291],[10.895667581718287,-5.7605416350646514]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // modify popup if contains media
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var imgTd = tempDiv.querySelector('td img');
+            if (imgTd) {
+                var src = imgTd.getAttribute('src');
+                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
+                    var audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = src;
+                    imgTd.parentNode.replaceChild(audio, imgTd);
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
+                    var video = document.createElement('video');
+                    video.controls = true;
+                    video.src = src;
+                    video.style.width = "400px";
+                    video.style.height = "300px";
+                    video.style.maxHeight = "60vh";
+                    video.style.maxWidth = "60vw";
+                    imgTd.parentNode.replaceChild(video, imgTd);
+                    popup._contentNode.classList.add('media');
+                    // Aggiorna il popup quando il video carica i metadati
+                    video.addEventListener('loadedmetadata', function() {
+                        popup.update();
+                    });
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else {
+                    popup._contentNode.classList.remove('media');
+                }
+            } else {
+                popup._contentNode.classList.remove('media');
+            }
+        }
+        var title = new L.Control({'position':'topleft'});
+        title.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+        title.update = function () {
+            this._div.innerHTML = '<h2>CARTE DE TURBIDITE DE LA RIVIERE BAGOUE</h2>';
+        };
+        title.addTo(map);
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            map.setMaxBounds(map.getBounds());
+            map.setMinZoom(map.getZoom());
+        }
+        function pop_SITE_ORPAILLAGE_0(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(String(feature.properties['Id']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FF'] !== null ? autolinker.link(String(feature.properties['FF']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LOCALITE'] !== null ? autolinker.link(String(feature.properties['LOCALITE']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Stru_Site'] !== null ? autolinker.link(String(feature.properties['Stru_Site']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Hydr_Prox'] !== null ? autolinker.link(String(feature.properties['Hydr_Prox']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Act_Pass'] !== null ? autolinker.link(String(feature.properties['Act_Pass']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['gridcode'] !== null ? autolinker.link(String(feature.properties['gridcode']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
 
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --gold:#d4af37;--gold2:#f2cb59;--dark:#081425;--dark2:#0c1f38;--dark3:#10294a;
-  --panel:#10294a;--panel2:#17375f;--border:rgba(201,168,76,0.2);--border2:rgba(201,168,76,0.4);
-  --tx:#f0e8d5;--muted:#9e8c6a;--font:'Montserrat',sans-serif;--mono:'Source Code Pro',monospace;
-}
-html,body{height:100%;width:100%;font-family:var(--font);background:var(--dark);color:var(--tx);overflow:hidden}
-#app{display:flex;flex-direction:column;height:100vh;width:100vw}
-#header{display:flex;align-items:center;gap:20px;min-height:70px;padding:0 24px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;z-index:2000;position:relative;}
-#header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold) 20%,var(--gold2) 50%,var(--gold) 80%,transparent);}
-.h-logo{width:48px;height:48px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(201,168,76,0.4);}
-.h-logo svg{width:24px;height:24px;fill:var(--dark)}
-.h-title{font-size:17px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--tx);line-height:1.1;}
-.h-sub{font-size:9px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-top:3px;}
-.h-badges{display:flex;gap:8px;flex-shrink:0}
-.badge{font-size:10px;font-weight:600;letter-spacing:0.08em;padding:5px 14px;border-radius:20px;border:1px solid var(--border2);color:var(--gold);background:rgba(201,168,76,0.08);text-transform:uppercase;white-space:nowrap;}
-#body{display:flex;flex:1;overflow:hidden}
-#sidebar{width:280px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;z-index:1000;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,0.2) transparent;}
-#sidebar::-webkit-scrollbar{width:3px}
-#sidebar::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.2);border-radius:3px}
-.sb-section{border-bottom:1px solid var(--border);padding:16px 18px}
-.sb-section:last-child{border-bottom:none}
-.sb-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-.sb-head-title{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);}
-.leg-item{display:flex;align-items:center;gap:10px;padding:3px 0}
-.leg-line{width:28px;height:3px;border-radius:2px;flex-shrink:0}
-.leg-label{font-size:14px;color:#ffffff;font-weight:600}
-.info-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
-.info-key{font-size:13px;color:#dbeafe;font-weight:500}
-.info-val{font-size:13px;color:#f2cb59;font-weight:700;font-family:var(--mono)}
-.sb-label{font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;margin-top:8px}
-.sb-select{width:100%;padding:7px 10px;background:var(--dark3);border:1px solid var(--border);border-radius:6px;color:var(--tx);font-family:var(--font);font-size:11px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23c9a84c'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
-.sb-select:focus{outline:none;border-color:var(--gold)}
-.sb-clear{font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline;margin-top:6px;display:inline-block;}
-.sb-clear:hover{color:var(--gold)}
-#map-wrap{flex:1;position:relative;overflow:hidden}
-#map{width:100%;height:100%;background:#e8e0d8!important}
-#rpanel{position:absolute;top:16px;right:16px;z-index:1000;width:220px;background:rgba(26,20,16,0.92);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.6);overflow:hidden;backdrop-filter:blur(10px);}
-#rpanel.collapsed #rpbody{display:none}
-#rpanel.collapsed #rptoggle{transform:rotate(-90deg)}
-.rp-head{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--panel2);user-select:none;}
-.rp-head:hover{background:rgba(201,168,76,0.05)}
-.rp-head-title{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);flex:1}
-#rptoggle{color:var(--muted);font-size:11px;transition:transform .2s}
-#rpbody{padding:8px 0}
-.rp-row{display:flex;align-items:center;gap:9px;padding:5px 14px;cursor:pointer;transition:background .12s;}
-.rp-row:hover{background:rgba(201,168,76,0.05)}
-.rp-row input[type=checkbox]{appearance:none;width:14px;height:14px;border:1.5px solid var(--border2);border-radius:3px;background:transparent;cursor:pointer;flex-shrink:0;position:relative;transition:all .12s;}
-.rp-row input[type=checkbox]:checked{background:var(--gold);border-color:var(--gold)}
-.rp-row input[type=checkbox]:checked::after{content:'';position:absolute;left:2px;top:0;width:6px;height:9px;border:1.5px solid var(--dark);border-top:none;border-left:none;transform:rotate(42deg);}
-.rp-dot{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.rp-dot.localite{width:10px;height:10px;border-radius:50%;background:#000;border:2px solid #fff;}
-.rp-dot.hydro{width:20px;height:4px;border-radius:999px;background:#38bdf8;}
-.rp-dot.bassin{width:18px;height:12px;background:transparent;border:2px solid #444;border-radius:3px;}
-.rp-dot.saison{width:20px;height:4px;border-radius:999px;}
-#toolbar{position:absolute;top:16px;left:16px;z-index:1000;display:flex;flex-direction:column;gap:3px;}
-.tbbtn{width:38px;height:38px;background:rgba(26,20,16,0.92);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:17px;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,0.4);user-select:none;backdrop-filter:blur(8px);}
-.tbbtn:hover{background:rgba(201,168,76,0.12);color:var(--gold);border-color:var(--border2)}
-.tbbtn:active{transform:scale(.93)}
-.tbsep{height:1px;background:var(--border);margin:2px 4px}
-#map-title{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:1000;background:var(--dark2);border:1px solid var(--border2);border-radius:8px;padding:12px 28px;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
-#sbar{position:absolute;bottom:0;left:0;right:0;height:24px;background:rgba(18,14,10,0.9);backdrop-filter:blur(8px);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:18px;z-index:1000;}
-.si{display:flex;align-items:center;gap:5px;font-size:9px;font-family:var(--mono);color:var(--muted);white-space:nowrap}
-.sdot{width:5px;height:5px;border-radius:50%;background:#22c55e;animation:pulse 2.5s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.ss{flex:1}
-.leaflet-control-zoom,.leaflet-control-locate,.leaflet-control-measure,.leaflet-control-layers,.leaflet-bar{display:none!important}
-.leaflet-popup-content-wrapper{background:var(--panel)!important;border:1px solid var(--border2)!important;border-radius:10px!important;box-shadow:0 8px 24px rgba(0,0,0,0.6)!important;color:var(--tx)!important;padding:0!important;}
-.leaflet-popup-content{margin:0!important;font-family:var(--font)!important;font-size:12px!important;min-width:160px}
-.leaflet-popup-tip-container{display:none}
-.leaflet-popup-close-button{color:var(--muted)!important;font-size:16px!important;top:9px!important;right:11px!important}
-.leaflet-popup-close-button:hover{color:var(--gold)!important}
-.leaflet-popup-content table{width:100%;border-collapse:collapse}
-.leaflet-popup-content table tr:first-child td{padding:11px 14px 7px!important;font-size:12px!important;font-weight:700!important;color:var(--gold)!important;border-bottom:1px solid var(--border)!important;letter-spacing:0.03em;text-transform:uppercase;}
-.leaflet-popup-content table tr td{padding:4px 14px!important;font-size:11px!important;color:var(--muted)!important;vertical-align:top}
-.leaflet-popup-content table tr:last-child td{padding-bottom:11px!important}
-.leaflet-popup-content table tr:nth-child(even){background:rgba(255,255,255,0.02)}
-.leaflet-attribution-flag{display:none!important}
-.leaflet-control-attribution{background:rgba(18,14,10,0.85)!important;color:var(--muted)!important;font-size:9px!important;font-family:var(--mono)!important;padding:2px 8px!important;border-radius:5px 0 0 0!important;}
-.leaflet-control-attribution a{color:var(--gold)!important}
-.leaflet-tooltip{background:var(--panel2)!important;border:1px solid var(--border2)!important;border-radius:6px!important;color:var(--tx)!important;font-family:var(--font)!important;font-size:11px!important;font-weight:600!important;padding:4px 10px!important;box-shadow:0 2px 12px rgba(0,0,0,0.5)!important;}
-.css_LOCALITE_10.leaflet-tooltip{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important;}
-.leaflet-tooltip::before{display:none!important}
-@media(max-width:900px){#sidebar{display:none}.h-sub,.h-badges{display:none}#header{min-height:54px}}
-</style>
-</head>
-<body>
-<div id="app">
-
-<header id="header">
-  <div class="h-logo">
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2C12 2 5 10 5 14.5a7 7 0 0 0 14 0C19 10 12 2 12 2z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M9 14.5c0-1.5 1.3-2.5 3-2.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.8"/>
-    <path d="M8.5 16.5c0-2 1.6-3.5 3.5-3.5s3.5 1.5 3.5 3.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.5"/>
-  </svg>
-</div>
-  <div class="h-text">
-    <div class="h-title">Carte de Turbidité de la Rivière Bagoué</div>
-    <div class="h-sub"></div>
-  </div>
-  <div class="h-badges">
-    <span class="badge">2016 – 2026</span>
-    <span class="badge">NDTI · Sentinel-2</span>
-    <span class="badge">Côte d'Ivoire</span>
-  </div>
-</header>
-
-<div id="body">
-  <aside id="sidebar">
-    <div class="sb-section">
-      <div class="sb-head"><span>🌊</span><span class="sb-head-title">Légende Turbidité</span></div>
-      <div class="leg-item"><div class="leg-line" style="background:#2563eb"></div><span class="leg-label">Très Faible</span></div>
-      <div class="leg-item"><div class="leg-line" style="background:#06b6d4"></div><span class="leg-label">Faible</span></div>
-      <div class="leg-item"><div class="leg-line" style="background:#eab308"></div><span class="leg-label">Moyenne</span></div>
-      <div class="leg-item"><div class="leg-line" style="background:#f97316"></div><span class="leg-label">Élevée</span></div>
-      <div class="leg-item"><div class="leg-line" style="background:#dc2626"></div><span class="leg-label">Très Élevée</span></div>
-    </div>
-
-    <!-- ⛏️ SECTION ORPAILLAGE AJOUTÉE -->
-    <div class="sb-section">
-      <div class="sb-head"><span>⛏️</span><span class="sb-head-title">Sites d'Orpaillage</span></div>
-      <div class="leg-item">
-        <div style="width:14px;height:14px;border-radius:3px;background:rgba(220,38,38,0.8);border:1.5px solid #ef4444;flex-shrink:0"></div>
-        <span class="leg-label" style="font-size:12px">Très actif</span>
-      </div>
-      <div class="leg-item">
-        <div style="width:14px;height:14px;border-radius:3px;background:rgba(234,88,12,0.8);border:1.5px solid #f97316;flex-shrink:0"></div>
-        <span class="leg-label" style="font-size:12px">Actifs</span>
-      </div>
-      <div class="leg-item">
-        <div style="width:14px;height:14px;border-radius:3px;background:rgba(234,179,8,0.8);border:1.5px solid #eab308;flex-shrink:0"></div>
-        <span class="leg-label" style="font-size:12px">Partiellement Actif</span>
-      </div>
-      <div class="leg-item">
-        <div style="width:14px;height:14px;border-radius:3px;background:rgba(100,116,139,0.6);border:1.5px solid #94a3b8;flex-shrink:0"></div>
-        <span class="leg-label" style="font-size:12px">Abandonné</span>
-      </div>
-      <div class="sb-label" style="margin-top:10px">Filtrer par statut</div>
-      <select class="sb-select" id="filter-orp" onchange="filterOrpaillage(this.value)">
-        <option value="all">Tous les sites</option>
-        <option value="Très actif">Très actif (4)</option>
-        <option value="Actifs">Actifs (549)</option>
-        <option value="Partiellement Actif">Partiellement Actif (43)</option>
-        <option value="Abandonné">Abandonné (24 064)</option>
-      </select>
-    </div>
-
-    <div class="sb-section">
-      <div class="sb-head"><span>📊</span><span class="sb-head-title">Informations</span></div>
-      <div class="info-row"><span class="info-key">Indice</span><span class="info-val">NDTI</span></div>
-      <div class="info-row"><span class="info-key">Satellite</span><span class="info-val">Sentinel-2</span></div>
-      <div class="info-row"><span class="info-key">Période</span><span class="info-val">2016 – 2026</span></div>
-      <div class="info-row"><span class="info-key">Bassin</span><span class="info-val">Bagoué</span></div>
-      <div class="info-row"><span class="info-key">Pays</span><span class="info-val">Côte d'Ivoire</span></div>
-    </div>
-    <div class="sb-section">
-      <div class="sb-head"><span>🔽</span><span class="sb-head-title">Filtres</span></div>
-      <div class="sb-label">Saison</div>
-      <select class="sb-select" id="filter-season" onchange="filterSeason(this.value)">
-        <option value="all">Toutes les saisons</option>
-        <option value="seche">Saison sèche</option>
-        <option value="pluie">Saison des pluies</option>
-      </select>
-      <div class="sb-label" style="margin-top:12px">Année</div>
-      <select class="sb-select" id="filter-year" onchange="filterYear(this.value)">
-        <option value="all">Toutes les années</option>
-        <option value="2016">2016</option>
-        <option value="2020">2020</option>
-        <option value="2025">2025</option>
-        <option value="2026">2026</option>
-      </select>
-      <span class="sb-clear" onclick="resetFilters()">Effacer les filtres</span>
-    </div>
-    <div class="sb-section">
-      <div class="sb-head"><span>📍</span><span class="sb-head-title">Région</span></div>
-      <div class="sb-label">Sous-préfecture</div>
-      <select class="sb-select" id="filter-sp">
-        <option value="">Toutes</option>
-      </select>
-    </div>
-  </aside>
-
-  <div id="map-wrap">
-    <div id="map"></div>
-    <div id="toolbar">
-      <div class="tbbtn" id="btn-zi">+</div>
-      <div class="tbbtn" id="btn-zo">−</div>
-      <div class="tbbtn" id="btn-rst" style="font-size:13px">⌂</div>
-      <div class="tbsep"></div>
-      <div class="tbbtn" id="btn-loc" style="font-size:13px">◎</div>
-    </div>
-    <div id="rpanel">
-      <div class="rp-head" onclick="document.getElementById('rpanel').classList.toggle('collapsed')">
-        <span class="rp-head-title">Couches</span><span id="rptoggle">▾</span>
-      </div>
-      <div id="rpbody">
-        <div class="rp-row"><input type="checkbox" id="ccl" checked><div class="rp-dot localite"></div><label class="rp-label" for="ccl">Localité</label></div>
-        <div class="rp-row"><input type="checkbox" id="cs2026" checked><div class="rp-dot" style="background:#dc2626"></div><label class="rp-label" for="cs2026">2026 Saison Sèche</label></div>
-        <div class="rp-row"><input type="checkbox" id="cp2025" checked><div class="rp-dot" style="background:#f97316"></div><label class="rp-label" for="cp2025">2025 Saison Pluvieuse</label></div>
-        <div class="rp-row"><input type="checkbox" id="cs2025" checked><div class="rp-dot saison" style="background:#ef4444"></div><label class="rp-label" for="cs2025">2025 Saison Sèche</label></div>
-        <div class="rp-row"><input type="checkbox" id="cp2020" checked><div class="rp-dot" style="background:#06b6d4"></div><label class="rp-label" for="cp2020">2020 Saison Pluvieuse</label></div>
-        <div class="rp-row"><input type="checkbox" id="cs2020" checked><div class="rp-dot" style="background:#2563eb"></div><label class="rp-label" for="cs2020">2020 Saison Sèche</label></div>
-        <div class="rp-row"><input type="checkbox" id="cs2016" checked><div class="rp-dot" style="background:#7c3aed"></div><label class="rp-label" for="cs2016">2016 Saison Sèche</label></div>
-        <div class="rp-row"><input type="checkbox" id="chydro" checked><div class="rp-dot hydro"></div><label class="rp-label" for="chydro">Hydrographie</label></div>
-        <div class="rp-row"><input type="checkbox" id="cbassin" checked><div class="rp-dot bassin"></div><label class="rp-label" for="cbassin">Bassin versant</label></div>
-        <!-- ⛏️ COUCHE ORPAILLAGE AJOUTÉE -->
-        <div class="rp-row"><input type="checkbox" id="corp" checked><div class="rp-dot" style="width:13px;height:13px;border-radius:3px;background:rgba(234,88,12,0.8);border:1.5px solid #f97316;"></div><label class="rp-label" for="corp">Sites d'Orpaillage</label></div>
-        <div class="rp-row"><input type="checkbox" id="cosm" checked disabled style="opacity:0.5;cursor:not-allowed"><div class="rp-dot" style="background:#0ea5e9"></div><label class="rp-label" for="cosm">OSM Standard</label></div>
-      </div>
-    </div>
-    <div id="map-title">Carte de Turbidité de la Rivière Bagoué</div>
-    <div id="sbar">
-      <div class="si"><div class="sdot"></div><span>Données chargées</span></div>
-      <div class="si" id="szoom">—</div>
-      <div class="si" id="scoords">—</div>
-      <div class="ss"></div>
-      <div class="si">NDTI · Sentinel-2 · QGIS</div>
-      <div class="si">© OpenStreetMap contributors, CC-BY-SA</div>
-    </div>
-  </div>
-</div>
-</div>
-
-<script src="qgis2web_expressions.js"></script>
-<script src="leaflet.js"></script>
-<script src="L.Control.Layers.Tree.min.js"></script>
-<script src="L.Control.Locate.min.js"></script>
-<script src="leaflet.rotatedMarker.js"></script>
-<script src="leaflet.pattern.js"></script>
-<script src="leaflet-hash.js"></script>
-<script src="Autolinker.min.js"></script>
-<script src="rbush.min.js"></script>
-<script src="labelgun.min.js"></script>
-<script src="labels.js"></script>
-<script src="leaflet.photon.js"></script>
-<script src="leaflet-measure.js"></script>
-<script src="leaflet-search.js"></script>
-<script src="BASSIN_1.js"></script>
-<script src="hydrographie_2.js"></script>
-<script src="TURBDITE_SECHE_2016_3.js"></script>
-<script src="TURBDITE_SECHE_2020_4.js"></script>
-<script src="TURBDITE_PLUIE_2020_5.js"></script>
-<script src="TURBDITE_SECHE_2025_6.js"></script>
-<script src="TURBDITE_PLUIE_2025_7.js"></script>
-<script src="TURBDITE_SECHE_2026_8.js"></script>
-<script src="Sous_prfecture_9.js"></script>
-<script src="LOCALITE_10.js"></script>
-<script src="Chef_lieu_sp_11.js"></script>
-<!-- ⛏️ SCRIPT ORPAILLAGE AJOUTÉ -->
-<script src="SITE_ORPAILLAGE_0.js"></script>
-
-<script>
-var BOUNDS=[[10.056401065451533,-6.903393659582564],[10.931165535247988,-5.548619907129459]];
-var map=L.map('map',{zoomControl:false,maxZoom:12,minZoom:1,attributionControl:true}).fitBounds(BOUNDS);
-map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
-var hash=new L.Hash(map);
-var autolinker=new Autolinker({truncate:{length:30,location:'smart'}});
-
-function removeEmptyRowsFromPopupContent(c,f){var d=document.createElement('div');d.innerHTML=c;d.querySelectorAll('tr').forEach(function(r){var td=r.querySelector('td.visible-with-data');if(td&&f.properties[td.id]==null)r.remove();});return d.innerHTML;}
-function addClassToPopupIfMedia(c,p){var d=document.createElement('div');d.innerHTML=c;var img=d.querySelector('td img');if(!img){p._contentNode.classList.remove('media');return;}var src=img.getAttribute('src');if(/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)){p._contentNode.classList.add('media');setTimeout(function(){p.update();},10);}else{p._contentNode.classList.remove('media');}}
-var highlightLayer;
-function highlightFeature(e){highlightLayer=e.target;var t=e.target.feature.geometry.type;if(t==='LineString'||t==='MultiLineString')highlightLayer.setStyle({color:'rgba(201,168,76,1)'});else highlightLayer.setStyle({fillColor:'rgba(201,168,76,1)',fillOpacity:1});highlightLayer.openPopup();}
-var bounds_group=new L.featureGroup([]);
-function setBounds(){map.setMaxBounds(map.getBounds());map.setMinZoom(map.getZoom());}
-function mkpop(fields,feature){var rows=fields.map(function(f,i){var v=feature.properties[f]!==null?autolinker.link(String(feature.properties[f]).replace(/'/g,"'").toLocaleString()):'';if(!v)return'';if(i===0)return'<tr><td colspan="2" style="font-weight:700;font-size:12px;color:#c9a84c;border-bottom:1px solid rgba(201,168,76,0.2);padding-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">'+v+'</td></tr>';return'<tr><td style="color:#9e8c6a;padding-right:8px">'+f+'</td><td style="color:#f0e8d5">'+v+'</td></tr>';}).join('');return'<table>'+rows+'</table>';}
-function bindpop(layer,content){layer.on('popupopen',function(e){addClassToPopupIfMedia(content,e.popup);});layer.bindPopup(content,{maxHeight:380,minWidth:180});}
-function handlers(layer){return{mouseover:highlightFeature,mouseout:function(e){for(var i in e.target._eventParents)if(typeof e.target._eventParents[i].resetStyle==='function')e.target._eventParents[i].resetStyle(e.target);if(typeof layer.closePopup==='function')layer.closePopup();else layer.eachLayer(function(f){f.closePopup();});}};}
-
-map.createPane('pane_OSMStandard_0');map.getPane('pane_OSMStandard_0').style.zIndex=400;
-var layer_OSMStandard_0=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{pane:'pane_OSMStandard_0',opacity:0.85,attribution:'<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',minZoom:1,maxZoom:12,minNativeZoom:0,maxNativeZoom:19});
-map.addLayer(layer_OSMStandard_0);
-
-var TC=['rgba(37,99,235,0.9)','rgba(6,182,212,0.9)','rgba(234,179,8,0.9)','rgba(249,115,22,0.9)','rgba(220,38,38,0.9)'];
-function ts(pane,c){return{pane:pane,opacity:1,color:c,dashArray:'',lineCap:'round',lineJoin:'round',weight:4,fillOpacity:0,interactive:true};}
-
-function pop_BASSIN_1(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['fid','DN'],feature),feature));}
-function style_BASSIN_1_0(){return{pane:'pane_BASSIN_1',opacity:1,color:'rgba(20,20,20,1)',dashArray:'',lineCap:'round',lineJoin:'round',weight:3,fill:true,fillOpacity:0,fillColor:'rgba(0,0,0,0)',interactive:true};}
-map.createPane('pane_BASSIN_1');map.getPane('pane_BASSIN_1').style.zIndex=401;map.getPane('pane_BASSIN_1').style['mix-blend-mode']='normal';
-var layer_BASSIN_1=new L.geoJson(json_BASSIN_1,{attribution:'',interactive:true,dataVar:'json_BASSIN_1',layerName:'layer_BASSIN_1',pane:'pane_BASSIN_1',onEachFeature:pop_BASSIN_1,style:style_BASSIN_1_0});
-bounds_group.addLayer(layer_BASSIN_1);map.addLayer(layer_BASSIN_1);
-
-function pop_hydrographie_2(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['arcid','grid_code','from_node','to_node'],feature),feature));}
-function style_hydrographie_2_0(feature){var gc=feature.properties['grid_code'];if(gc>=1&&gc<=1)return{pane:'pane_hydrographie_2',opacity:0.7,color:'rgba(191,240,247,0.8)',dashArray:'',lineCap:'round',lineJoin:'round',weight:1,fillOpacity:0,interactive:true};if(gc>1&&gc<=2)return{pane:'pane_hydrographie_2',opacity:1,color:'rgba(39,186,247,1)',dashArray:'',lineCap:'round',lineJoin:'round',weight:1.2,fillOpacity:0,interactive:true};if(gc>2&&gc<=5)return{pane:'pane_hydrographie_2',opacity:1,color:'rgba(59,130,246,1)',dashArray:'',lineCap:'round',lineJoin:'round',weight:2.2,fillOpacity:0,interactive:true};}
-map.createPane('pane_hydrographie_2');map.getPane('pane_hydrographie_2').style.zIndex=402;map.getPane('pane_hydrographie_2').style['mix-blend-mode']='normal';
-var layer_hydrographie_2=new L.geoJson(json_hydrographie_2,{attribution:'',interactive:true,dataVar:'json_hydrographie_2',layerName:'layer_hydrographie_2',pane:'pane_hydrographie_2',onEachFeature:pop_hydrographie_2,style:style_hydrographie_2_0});
-bounds_group.addLayer(layer_hydrographie_2);map.addLayer(layer_hydrographie_2);
-
-function pop_TURBDITE_SECHE_2016_3(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['arcid','grid_code','from_node','to_node','EauNDTI201'],feature),feature));}
-function style_TURBDITE_SECHE_2016_3_0(feature){var v=feature.properties['EauNDTI201'];if(v>=-0.009348&&v<=0.021332)return ts('pane_TURBDITE_SECHE_2016_3',TC[0]);if(v>0.021332&&v<=0.052011)return ts('pane_TURBDITE_SECHE_2016_3',TC[1]);if(v>0.052011&&v<=0.082691)return ts('pane_TURBDITE_SECHE_2016_3',TC[2]);if(v>0.082691&&v<=0.113371)return ts('pane_TURBDITE_SECHE_2016_3',TC[3]);if(v>0.113371&&v<=0.144050)return ts('pane_TURBDITE_SECHE_2016_3',TC[4]);}
-map.createPane('pane_TURBDITE_SECHE_2016_3');map.getPane('pane_TURBDITE_SECHE_2016_3').style.zIndex=403;map.getPane('pane_TURBDITE_SECHE_2016_3').style['mix-blend-mode']='normal';
-var layer_TURBDITE_SECHE_2016_3=new L.geoJson(json_TURBDITE_SECHE_2016_3,{attribution:'',interactive:true,dataVar:'json_TURBDITE_SECHE_2016_3',layerName:'layer_TURBDITE_SECHE_2016_3',pane:'pane_TURBDITE_SECHE_2016_3',onEachFeature:pop_TURBDITE_SECHE_2016_3,style:style_TURBDITE_SECHE_2016_3_0});
-bounds_group.addLayer(layer_TURBDITE_SECHE_2016_3);map.addLayer(layer_TURBDITE_SECHE_2016_3);
-
-function pop_TURBDITE_SECHE_2020_4(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['arcid','grid_code','from_node','to_node','EauNDTIS20'],feature),feature));}
-function style_TURBDITE_SECHE_2020_4_0(feature){var v=feature.properties['EauNDTIS20'];if(v>=-0.047445&&v<=0.000092)return ts('pane_TURBDITE_SECHE_2020_4',TC[0]);if(v>0.000092&&v<=0.047629)return ts('pane_TURBDITE_SECHE_2020_4',TC[1]);if(v>0.047629&&v<=0.095166)return ts('pane_TURBDITE_SECHE_2020_4',TC[2]);if(v>0.095166&&v<=0.142704)return ts('pane_TURBDITE_SECHE_2020_4',TC[3]);if(v>0.142704&&v<=0.190241)return ts('pane_TURBDITE_SECHE_2020_4',TC[4]);}
-map.createPane('pane_TURBDITE_SECHE_2020_4');map.getPane('pane_TURBDITE_SECHE_2020_4').style.zIndex=404;map.getPane('pane_TURBDITE_SECHE_2020_4').style['mix-blend-mode']='normal';
-var layer_TURBDITE_SECHE_2020_4=new L.geoJson(json_TURBDITE_SECHE_2020_4,{attribution:'',interactive:true,dataVar:'json_TURBDITE_SECHE_2020_4',layerName:'layer_TURBDITE_SECHE_2020_4',pane:'pane_TURBDITE_SECHE_2020_4',onEachFeature:pop_TURBDITE_SECHE_2020_4,style:style_TURBDITE_SECHE_2020_4_0});
-bounds_group.addLayer(layer_TURBDITE_SECHE_2020_4);map.addLayer(layer_TURBDITE_SECHE_2020_4);
-
-function pop_TURBDITE_PLUIE_2020_5(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['arcid','grid_code','from_node','to_node','EauNDTIP20'],feature),feature));}
-function style_TURBDITE_PLUIE_2020_5_0(feature){var v=feature.properties['EauNDTIP20'];if(v>=-0.159235&&v<=-0.105127)return ts('pane_TURBDITE_PLUIE_2020_5',TC[0]);if(v>-0.105127&&v<=-0.051019)return ts('pane_TURBDITE_PLUIE_2020_5',TC[1]);if(v>-0.051019&&v<=0.003090)return ts('pane_TURBDITE_PLUIE_2020_5',TC[2]);if(v>0.003090&&v<=0.057198)return ts('pane_TURBDITE_PLUIE_2020_5',TC[3]);if(v>0.057198&&v<=0.111307)return ts('pane_TURBDITE_PLUIE_2020_5',TC[4]);}
-map.createPane('pane_TURBDITE_PLUIE_2020_5');map.getPane('pane_TURBDITE_PLUIE_2020_5').style.zIndex=405;map.getPane('pane_TURBDITE_PLUIE_2020_5').style['mix-blend-mode']='normal';
-var layer_TURBDITE_PLUIE_2020_5=new L.geoJson(json_TURBDITE_PLUIE_2020_5,{attribution:'',interactive:true,dataVar:'json_TURBDITE_PLUIE_2020_5',layerName:'layer_TURBDITE_PLUIE_2020_5',pane:'pane_TURBDITE_PLUIE_2020_5',onEachFeature:pop_TURBDITE_PLUIE_2020_5,style:style_TURBDITE_PLUIE_2020_5_0});
-bounds_group.addLayer(layer_TURBDITE_PLUIE_2020_5);map.addLayer(layer_TURBDITE_PLUIE_2020_5);
-
-function pop_TURBDITE_SECHE_2025_6(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['arcid','grid_code','from_node','to_node','EauNDTIS20'],feature),feature));}
-function style_TURBDITE_SECHE_2025_6_0(feature){var v=feature.properties['EauNDTIS20'];if(v>=-0.104923&&v<=-0.046212)return ts('pane_TURBDITE_SECHE_2025_6',TC[0]);if(v>-0.046212&&v<=0.013891)return ts('pane_TURBDITE_SECHE_2025_6',TC[1]);if(v>0.013891&&v<=0.060612)return ts('pane_TURBDITE_SECHE_2025_6',TC[2]);if(v>0.060612&&v<=0.101585)return ts('pane_TURBDITE_SECHE_2025_6',TC[3]);if(v>0.101585&&v<=0.157150)return ts('pane_TURBDITE_SECHE_2025_6',TC[4]);}
-map.createPane('pane_TURBDITE_SECHE_2025_6');map.getPane('pane_TURBDITE_SECHE_2025_6').style.zIndex=406;map.getPane('pane_TURBDITE_SECHE_2025_6').style['mix-blend-mode']='normal';
-var layer_TURBDITE_SECHE_2025_6=new L.geoJson(json_TURBDITE_SECHE_2025_6,{attribution:'',interactive:true,dataVar:'json_TURBDITE_SECHE_2025_6',layerName:'layer_TURBDITE_SECHE_2025_6',pane:'pane_TURBDITE_SECHE_2025_6',onEachFeature:pop_TURBDITE_SECHE_2025_6,style:style_TURBDITE_SECHE_2025_6_0});
-bounds_group.addLayer(layer_TURBDITE_SECHE_2025_6);map.addLayer(layer_TURBDITE_SECHE_2025_6);
-
-function pop_TURBDITE_PLUIE_2025_7(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['arcid','grid_code','from_node','to_node','EauNDTIP20'],feature),feature));}
-function style_TURBDITE_PLUIE_2025_7_0(feature){var v=feature.properties['EauNDTIP20'];if(v>=-0.220083&&v<=-0.149454)return ts('pane_TURBDITE_PLUIE_2025_7',TC[0]);if(v>-0.149454&&v<=-0.078825)return ts('pane_TURBDITE_PLUIE_2025_7',TC[1]);if(v>-0.078825&&v<=-0.008196)return ts('pane_TURBDITE_PLUIE_2025_7',TC[2]);if(v>-0.008196&&v<=0.062433)return ts('pane_TURBDITE_PLUIE_2025_7',TC[3]);if(v>0.062433&&v<=0.133062)return ts('pane_TURBDITE_PLUIE_2025_7',TC[4]);}
-map.createPane('pane_TURBDITE_PLUIE_2025_7');map.getPane('pane_TURBDITE_PLUIE_2025_7').style.zIndex=407;map.getPane('pane_TURBDITE_PLUIE_2025_7').style['mix-blend-mode']='normal';
-var layer_TURBDITE_PLUIE_2025_7=new L.geoJson(json_TURBDITE_PLUIE_2025_7,{attribution:'',interactive:true,dataVar:'json_TURBDITE_PLUIE_2025_7',layerName:'layer_TURBDITE_PLUIE_2025_7',pane:'pane_TURBDITE_PLUIE_2025_7',onEachFeature:pop_TURBDITE_PLUIE_2025_7,style:style_TURBDITE_PLUIE_2025_7_0});
-bounds_group.addLayer(layer_TURBDITE_PLUIE_2025_7);map.addLayer(layer_TURBDITE_PLUIE_2025_7);
-
-function pop_TURBDITE_SECHE_2026_8(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['arcid','grid_code','from_node','to_node','NDTIF2026'],feature),feature));}
-function style_TURBDITE_SECHE_2026_8_0(feature){var v=feature.properties['NDTIF2026'];if(v>=-0.396105&&v<=-0.271304)return ts('pane_TURBDITE_SECHE_2026_8',TC[0]);if(v>-0.271304&&v<=-0.146502)return ts('pane_TURBDITE_SECHE_2026_8',TC[1]);if(v>-0.146502&&v<=-0.021701)return ts('pane_TURBDITE_SECHE_2026_8',TC[2]);if(v>-0.021701&&v<=0.103101)return ts('pane_TURBDITE_SECHE_2026_8',TC[3]);if(v>0.103101&&v<=0.227902)return ts('pane_TURBDITE_SECHE_2026_8',TC[4]);}
-map.createPane('pane_TURBDITE_SECHE_2026_8');map.getPane('pane_TURBDITE_SECHE_2026_8').style.zIndex=408;map.getPane('pane_TURBDITE_SECHE_2026_8').style['mix-blend-mode']='normal';
-var layer_TURBDITE_SECHE_2026_8=new L.geoJson(json_TURBDITE_SECHE_2026_8,{attribution:'',interactive:true,dataVar:'json_TURBDITE_SECHE_2026_8',layerName:'layer_TURBDITE_SECHE_2026_8',pane:'pane_TURBDITE_SECHE_2026_8',onEachFeature:pop_TURBDITE_SECHE_2026_8,style:style_TURBDITE_SECHE_2026_8_0});
-bounds_group.addLayer(layer_TURBDITE_SECHE_2026_8);map.addLayer(layer_TURBDITE_SECHE_2026_8);
-
-function pop_Sous_prfecture_9(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['NOM','SOUS_PREF','DEPARTEMEN','DISTRICT','NEW_REGION','PAYS','Pop2014'],feature),feature));}
-function style_Sous_prfecture_9_0(){return{pane:'pane_Sous_prfecture_9',opacity:0.9,color:'rgba(0,0,0,1)',dashArray:'',lineCap:'round',lineJoin:'round',weight:1.1,fill:true,fillOpacity:0,fillColor:'rgba(0,0,0,0)',interactive:true};}
-map.createPane('pane_Sous_prfecture_9');map.getPane('pane_Sous_prfecture_9').style.zIndex=409;map.getPane('pane_Sous_prfecture_9').style['mix-blend-mode']='normal';
-var layer_Sous_prfecture_9=new L.geoJson(json_Sous_prfecture_9,{attribution:'',interactive:true,dataVar:'json_Sous_prfecture_9',layerName:'layer_Sous_prfecture_9',pane:'pane_Sous_prfecture_9',onEachFeature:pop_Sous_prfecture_9,style:style_Sous_prfecture_9_0});
-bounds_group.addLayer(layer_Sous_prfecture_9);map.addLayer(layer_Sous_prfecture_9);
-
-function pop_LOCALITE_10(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['LOCALITY_N','SUBDPT_NAM','DPT_NAM','REGION_NAM','CLASS_NAME','LON_WGS84','LAT_WGS84'],feature),feature));}
-function style_LOCALITE_10_0(){return{pane:'pane_LOCALITE_10',radius:3.5,opacity:1,color:'rgba(0,0,0,1)',dashArray:'',lineCap:'round',lineJoin:'round',weight:1,fill:true,fillOpacity:1,fillColor:'rgba(30,30,30,1)',interactive:true};}
-map.createPane('pane_LOCALITE_10');map.getPane('pane_LOCALITE_10').style.zIndex=410;map.getPane('pane_LOCALITE_10').style['mix-blend-mode']='normal';
-var layer_LOCALITE_10=new L.geoJson(json_LOCALITE_10,{attribution:'',interactive:true,dataVar:'json_LOCALITE_10',layerName:'layer_LOCALITE_10',pane:'pane_LOCALITE_10',onEachFeature:pop_LOCALITE_10,pointToLayer:function(feature,latlng){return L.circleMarker(latlng,style_LOCALITE_10_0(feature));}});
-bounds_group.addLayer(layer_LOCALITE_10);map.addLayer(layer_LOCALITE_10);
-
-function pop_Chef_lieu_sp_11(feature,layer){layer.on(handlers(layer));bindpop(layer,removeEmptyRowsFromPopupContent(mkpop(['LOCALITY_N','SUBDPT_NAM','DPT_NAM','REGION_NAM','CLASS_NAME','LON_WGS84','LAT_WGS84'],feature),feature));}
-function style_Chef_lieu_sp_11_0(){return{pane:'pane_Chef_lieu_sp_11',radius:6,opacity:1,color:'rgba(0,0,0,1)',dashArray:'',lineCap:'round',lineJoin:'round',weight:1.5,fill:true,fillOpacity:1,fillColor:'rgba(255,255,255,1)',interactive:true};}
-map.createPane('pane_Chef_lieu_sp_11');map.getPane('pane_Chef_lieu_sp_11').style.zIndex=411;map.getPane('pane_Chef_lieu_sp_11').style['mix-blend-mode']='normal';
-var layer_Chef_lieu_sp_11=new L.geoJson(json_Chef_lieu_sp_11,{attribution:'',interactive:true,dataVar:'json_Chef_lieu_sp_11',layerName:'layer_Chef_lieu_sp_11',pane:'pane_Chef_lieu_sp_11',onEachFeature:pop_Chef_lieu_sp_11,pointToLayer:function(feature,latlng){return L.circleMarker(latlng,style_Chef_lieu_sp_11_0(feature));}});
-bounds_group.addLayer(layer_Chef_lieu_sp_11);map.addLayer(layer_Chef_lieu_sp_11);
-
-// ================================================================
-// ⛏️  COUCHE SITES D'ORPAILLAGE — zIndex 412, par-dessus tout
-// ================================================================
-map.createPane('pane_SITE_ORPAILLAGE_0');
-map.getPane('pane_SITE_ORPAILLAGE_0').style.zIndex = 412;
-map.getPane('pane_SITE_ORPAILLAGE_0').style['mix-blend-mode'] = 'normal';
-
-function getOrpColor(act) {
-  if (act === 'Très actif')          return 'rgba(220,38,38,0.82)';
-  if (act === 'Actifs')              return 'rgba(234,88,12,0.78)';
-  if (act === 'Partiellement Actif') return 'rgba(234,179,8,0.78)';
-  return 'rgba(100,116,139,0.52)';  // Abandonné
-}
-function getOrpBorder(act) {
-  if (act === 'Très actif')          return '#ef4444';
-  if (act === 'Actifs')              return '#f97316';
-  if (act === 'Partiellement Actif') return '#eab308';
-  return '#94a3b8';
-}
-
-function style_SITE_ORPAILLAGE_0(feature) {
-  var act = feature.properties['Act_Pass'];
-  return {
-    pane: 'pane_SITE_ORPAILLAGE_0',
-    opacity: 1,
-    color: getOrpBorder(act),
-    dashArray: '',
-    lineCap: 'round',
-    lineJoin: 'round',
-    weight: 0.8,
-    fill: true,
-    fillOpacity: 0.72,
-    fillColor: getOrpColor(act),
-    interactive: true
-  };
-}
-
-function pop_SITE_ORPAILLAGE_0(feature, layer) {
-  layer.on(handlers(layer));
-  var p = feature.properties;
-  var content = '<table>'
-    + '<tr><td colspan="2">' + (p['LOCALITE'] || 'Site d\'orpaillage') + '</td></tr>'
-    + (p['Act_Pass']  ? '<tr><td style="color:#9e8c6a;padding-right:8px">Statut</td><td style="color:#f0e8d5">' + p['Act_Pass'] + '</td></tr>' : '')
-    + (p['Stru_Site'] ? '<tr><td style="color:#9e8c6a;padding-right:8px">Structure</td><td style="color:#f0e8d5">' + p['Stru_Site'] + '</td></tr>' : '')
-    + (p['FF'] != null ? '<tr><td style="color:#9e8c6a;padding-right:8px">Superficie (ha)</td><td style="color:#f2cb59;font-family:var(--mono)">' + parseFloat(p['FF']).toFixed(4) + '</td></tr>' : '')
-    + (p['Id'] != null ? '<tr><td style="color:#9e8c6a;padding-right:8px">Id</td><td style="color:#f0e8d5">' + p['Id'] + '</td></tr>' : '')
-    + '</table>';
-  bindpop(layer, content);
-}
-
-var layer_SITE_ORPAILLAGE_0 = new L.geoJson(json_SITE_ORPAILLAGE_0, {
-  attribution: '',
-  interactive: true,
-  dataVar: 'json_SITE_ORPAILLAGE_0',
-  layerName: 'layer_SITE_ORPAILLAGE_0',
-  pane: 'pane_SITE_ORPAILLAGE_0',
-  onEachFeature: pop_SITE_ORPAILLAGE_0,
-  style: style_SITE_ORPAILLAGE_0
-});
-bounds_group.addLayer(layer_SITE_ORPAILLAGE_0);
-map.addLayer(layer_SITE_ORPAILLAGE_0);
-
-function filterOrpaillage(val) {
-  layer_SITE_ORPAILLAGE_0.eachLayer(function(l) {
-    var act = l.feature.properties['Act_Pass'];
-    if (val === 'all' || act === val) {
-      l.setStyle(style_SITE_ORPAILLAGE_0(l.feature));
-    } else {
-      l.setStyle({ opacity: 0, fillOpacity: 0 });
-    }
-  });
-}
-// ================================================================
-
-var labels=[],totalMarkers=0,i=0;
-layer_Sous_prfecture_9.eachLayer(function(layer){
-  layer.bindTooltip(layer.feature.properties['NOM']!==null?'<div style="color:#ffffff;font-size:10pt;font-family:\'Montserrat\',sans-serif;font-weight:700;text-shadow:1px 1px 2px #000,-1px -1px 2px #000,1px -1px 2px #000,-1px 1px 2px #000">'+layer.feature.properties['NOM']+'</div>':'',{permanent:true,offset:[0,-16],className:'css_Sous_prfecture_9'});
-  labels.push(layer);totalMarkers++;layer.added=true;addLabel(layer,i++);
-});
-var j=0;
-layer_LOCALITE_10.eachLayer(function(layer){
-  layer.bindTooltip(layer.feature.properties['LOCALITY_N']!==null?'<span style="color:#ffffff;font-size:9pt;font-weight:700;font-family:\'Montserrat\',sans-serif;text-shadow:1px 1px 2px #000,-1px -1px 2px #000,1px -1px 2px #000,-1px 1px 2px #000">'+layer.feature.properties['LOCALITY_N']+'</span>':'',{permanent:true,offset:[0,-14],className:'css_LOCALITE_10'});
-  labels.push(layer);totalMarkers++;layer.added=true;addLabel(layer,j++);
-});
-
-var spNames=[];
-layer_Sous_prfecture_9.eachLayer(function(l){var n=l.feature.properties['NOM'];if(n&&spNames.indexOf(n)===-1)spNames.push(n);});
-spNames.sort().forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;document.getElementById('filter-sp').appendChild(o);});
-document.getElementById('filter-sp').addEventListener('change',function(){
-  var v=this.value;
-  layer_Sous_prfecture_9.eachLayer(function(l){if(!v||l.feature.properties['NOM']===v){l.setStyle({fillOpacity:0.15,fillColor:'rgba(201,168,76,0.15)'});}else{l.setStyle(style_Sous_prfecture_9_0());}});
-});
-
-map.addControl(new L.Control.Search({layer:layer_BASSIN_1,initial:false,hideMarkerOnCollapse:true,propertyName:'DN'}));
-(function(){var b=document.getElementsByClassName('search-button');if(b.length>0)b[0].className+=' fa fa-binoculars';})();
-
-setBounds();
-map.on('zoomend layeradd layerremove',function(){resetLabels([layer_Sous_prfecture_9,layer_LOCALITE_10]);});
-
-document.getElementById('btn-zi').addEventListener('click',function(){map.zoomIn();});
-document.getElementById('btn-zo').addEventListener('click',function(){map.zoomOut();});
-document.getElementById('btn-rst').addEventListener('click',function(){map.fitBounds(BOUNDS);});
-document.getElementById('btn-loc').addEventListener('click',function(){if(navigator.geolocation)navigator.geolocation.getCurrentPosition(function(p){map.setView([p.coords.latitude,p.coords.longitude],11);});});
-
-var layerMap={
-  'cosm':layer_OSMStandard_0,
-  'cbassin':layer_BASSIN_1,
-  'chydro':layer_hydrographie_2,
-  'cs2016':layer_TURBDITE_SECHE_2016_3,
-  'cs2020':layer_TURBDITE_SECHE_2020_4,
-  'cp2020':layer_TURBDITE_PLUIE_2020_5,
-  'cs2025':layer_TURBDITE_SECHE_2025_6,
-  'cp2025':layer_TURBDITE_PLUIE_2025_7,
-  'cs2026':layer_TURBDITE_SECHE_2026_8,
-  'ccl':layer_Chef_lieu_sp_11,
-  'corp':layer_SITE_ORPAILLAGE_0
-};
-Object.keys(layerMap).forEach(function(id){
-  if(id==='cosm')return;
-  var el=document.getElementById(id);
-  if(!el)return;
-  el.addEventListener('change',function(){
-    if(this.checked) map.addLayer(layerMap[id]);
-    else map.removeLayer(layerMap[id]);
-  });
-});
-
-var seche=['cs2016','cs2020','cs2025','cs2026'],pluie=['cp2020','cp2025'];
-var all2016=['cs2016'],all2020=['cs2020','cp2020'],all2025=['cs2025','cp2025'],all2026=['cs2026'];
-function setVisible(ids,v){ids.forEach(function(id){var el=document.getElementById(id);if(!el)return;el.checked=v;if(v)map.addLayer(layerMap[id]);else map.removeLayer(layerMap[id]);});}
-function filterSeason(v){var yr=document.getElementById('filter-year').value;var allIds=['cs2016','cs2020','cp2020','cs2025','cp2025','cs2026'];if(v==='all'&&yr==='all'){setVisible(allIds,true);return;}allIds.forEach(function(id){var isSec=seche.indexOf(id)>-1;var isPlu=pluie.indexOf(id)>-1;var okS=(v==='all'||(v==='seche'&&isSec)||(v==='pluie'&&isPlu));var okY=true;if(yr!=='all'){var yids={'2016':all2016,'2020':all2020,'2025':all2025,'2026':all2026}[yr]||[];okY=yids.indexOf(id)>-1;}var show=okS&&okY;var el=document.getElementById(id);if(!el)return;el.checked=show;if(show)map.addLayer(layerMap[id]);else map.removeLayer(layerMap[id]);});}
-function filterYear(v){document.getElementById('filter-season').value='all';var allIds=['cs2016','cs2020','cp2020','cs2025','cp2025','cs2026'];if(v==='all'){setVisible(allIds,true);return;}var show={'2016':all2016,'2020':all2020,'2025':all2025,'2026':all2026}[v]||[];allIds.forEach(function(id){var s=show.indexOf(id)>-1;var el=document.getElementById(id);if(!el)return;el.checked=s;if(s)map.addLayer(layerMap[id]);else map.removeLayer(layerMap[id]);});}
-function resetFilters(){
-  document.getElementById('filter-season').value='all';
-  document.getElementById('filter-year').value='all';
-  document.getElementById('filter-sp').value='';
-  document.getElementById('filter-orp').value='all';
-  filterSeason('all');
-  filterOrpaillage('all');
-  layer_Sous_prfecture_9.eachLayer(function(l){l.setStyle(style_Sous_prfecture_9_0());});
-}
-
-map.on('mousemove',function(e){var t=e.latlng.lat.toFixed(4)+'°N  ·  '+e.latlng.lng.toFixed(4)+'°E';document.getElementById('scoords').textContent=t;});
-map.on('zoomend',function(){document.getElementById('szoom').textContent='Zoom '+map.getZoom();});
-document.getElementById('szoom').textContent='Zoom '+map.getZoom();
-</script>
-</body>
+        function style_SITE_ORPAILLAGE_0_0(feature) {
+            switch(String(feature.properties['Act_Pass'])) {
+                case 'Abandonné':
+                    return {
+                pane: 'pane_SITE_ORPAILLAGE_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(210,180,140,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Actifs':
+                    return {
+                pane: 'pane_SITE_ORPAILLAGE_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(153,50,204,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Partiellement Actif':
+                    return {
+                pane: 'pane_SITE_ORPAILLAGE_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,20,147,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Très actif':
+                    return {
+                pane: 'pane_SITE_ORPAILLAGE_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(26,26,26,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_SITE_ORPAILLAGE_0');
+        map.getPane('pane_SITE_ORPAILLAGE_0').style.zIndex = 400;
+        map.getPane('pane_SITE_ORPAILLAGE_0').style['mix-blend-mode'] = 'normal';
+        var layer_SITE_ORPAILLAGE_0 = new L.geoJson(json_SITE_ORPAILLAGE_0, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_SITE_ORPAILLAGE_0',
+            layerName: 'layer_SITE_ORPAILLAGE_0',
+            pane: 'pane_SITE_ORPAILLAGE_0',
+            onEachFeature: pop_SITE_ORPAILLAGE_0,
+            style: style_SITE_ORPAILLAGE_0_0,
+        });
+        bounds_group.addLayer(layer_SITE_ORPAILLAGE_0);
+        map.addLayer(layer_SITE_ORPAILLAGE_0);
+        var overlaysTree = [
+            {label: 'SITE_ORPAILLAGE<br /><table><tr><td style="text-align: center;"><img src="legend/SITE_ORPAILLAGE_0_Abandonné0.png" /></td><td>Abandonné</td></tr><tr><td style="text-align: center;"><img src="legend/SITE_ORPAILLAGE_0_Actifs1.png" /></td><td>Actifs</td></tr><tr><td style="text-align: center;"><img src="legend/SITE_ORPAILLAGE_0_PartiellementActif2.png" /></td><td>Partiellement Actif</td></tr><tr><td style="text-align: center;"><img src="legend/SITE_ORPAILLAGE_0_Trèsactif3.png" /></td><td>Très actif</td></tr></table>', layer: layer_SITE_ORPAILLAGE_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: false, 
+        });
+        lay.addTo(map);
+		document.addEventListener("DOMContentLoaded", function() {
+            // set new Layers List height which considers toggle icon
+            function newLayersListHeight() {
+                var layerScrollbarElement = document.querySelector('.leaflet-control-layers-scrollbar');
+                if (layerScrollbarElement) {
+                    var layersListElement = document.querySelector('.leaflet-control-layers-list');
+                    var originalHeight = layersListElement.style.height 
+                        || window.getComputedStyle(layersListElement).height;
+                    var newHeight = parseFloat(originalHeight) - 50;
+                    layersListElement.style.height = newHeight + 'px';
+                }
+            }
+            var isLayersListExpanded = true;
+            var controlLayersElement = document.querySelector('.leaflet-control-layers');
+            var toggleLayerControl = document.querySelector('.leaflet-control-layers-toggle');
+            // toggle Collapsed/Expanded and apply new Layers List height
+            toggleLayerControl.addEventListener('click', function() {
+                if (isLayersListExpanded) {
+                    controlLayersElement.classList.remove('leaflet-control-layers-expanded');
+                } else {
+                    controlLayersElement.classList.add('leaflet-control-layers-expanded');
+                }
+                isLayersListExpanded = !isLayersListExpanded;
+                newLayersListHeight()
+            });	
+			// apply new Layers List height if toggle layerstree
+			if (controlLayersElement) {
+				controlLayersElement.addEventListener('click', function(event) {
+					var toggleLayerHeaderPointer = event.target.closest('.leaflet-layerstree-header-pointer span');
+					if (toggleLayerHeaderPointer) {
+						newLayersListHeight();
+					}
+				});
+			}
+            // Collapsed/Expanded at Start to apply new height
+            setTimeout(function() {
+                toggleLayerControl.click();
+            }, 10);
+            setTimeout(function() {
+                toggleLayerControl.click();
+            }, 10);
+            // Collapsed touch/small screen
+            var isSmallScreen = window.innerWidth < 650;
+            if (isSmallScreen) {
+                setTimeout(function() {
+                    controlLayersElement.classList.remove('leaflet-control-layers-expanded');
+                    isLayersListExpanded = !isLayersListExpanded;
+                }, 500);
+            }  
+        });       
+        setBounds();
+        resetLabels([layer_SITE_ORPAILLAGE_0]);
+        map.on("zoomend", function(){
+            resetLabels([layer_SITE_ORPAILLAGE_0]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_SITE_ORPAILLAGE_0]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_SITE_ORPAILLAGE_0]);
+        });
+        </script>
+    </body>
 </html>

@@ -1,102 +1,66 @@
-/* TYPOGRAPHIE ÉQUILIBRÉE — BAGOUE PRO UI */
-
-.h-title{
-  font-size:20px !important;
-  font-weight:800;
-  letter-spacing:.04em;
-  line-height:1.15;
+.leaflet-control-layers-toggle.leaflet-layerstree-named-toggle {
+    margin: 2px 5px;
+    width: auto;
+    height: auto;
+    background-image: none;
 }
 
-.h-sub{
-  font-size:11px !important;
-  font-weight:500;
-  letter-spacing:.10em;
+.leaflet-control-layers-list{
+	font: 13px / 1.7 "Helvetica Neue", Arial, Helvetica, sans-serif;
 }
 
-.badge{
-  font-size:10px !important;
+.leaflet-layerstree-node {
 }
 
-.sh-label{
-  font-size:12px !important;
-  font-weight:700 !important;
+.leaflet-layerstree-header input{
+    margin-left: 0px;
 }
 
-.leg-txt{
-  font-size:14px !important;
-  font-weight:500 !important;
+
+.leaflet-layerstree-header {
 }
 
-.water-txt{
-  font-size:13px !important;
+.leaflet-layerstree-header-pointer {
+    cursor: pointer;
 }
 
-.water-sub{
-  font-size:10px !important;
+.leaflet-layerstree-header label {
+    display: inline-block;
+    cursor: pointer;
 }
 
-.info-k{
-  font-size:13px !important;
-  font-weight:500 !important;
+.leaflet-layerstree-header-label {
 }
 
-.info-v{
-  font-size:13px !important;
-  font-weight:600 !important;
+.leaflet-layerstree-header-name {
+	padding-left: 2px;
 }
 
-.sub-lbl{
-  font-size:10px !important;
+.leaflet-layerstree-header-space {
 }
 
-.fsel{
-  font-size:13px !important;
-  padding:9px 34px 9px 12px !important;
+.leaflet-layerstree-children {
+    padding-left: 20px;
 }
 
-.clr{
-  font-size:11px !important;
+.leaflet-layerstree-children-nopad {
+    padding-left: 0px;
 }
 
-.rph-lbl{
-  font-size:13px !important;
-  font-weight:700 !important;
+.leaflet-layerstree-closed {
 }
 
-.rpl{
-  font-size:14px !important;
-  font-weight:500 !important;
+.leaflet-layerstree-opened {
 }
 
-.rp-group-lbl{
-  font-size:10px !important;
+.leaflet-layerstree-hide {
+    display: none;
 }
 
-#map-foot{
-  font-size:13px !important;
+.leaflet-layerstree-nevershow {
+    display: none;
 }
 
-.si{
-  font-size:11px !important;
-}
-
-.leaflet-popup-content{
-  font-size:14px !important;
-}
-
-.leaflet-tooltip{
-  font-size:12px !important;
-  font-weight:600 !important;
-}
-
-/* Localités */
-.css_LOCALITE_10.leaflet-tooltip{
-  font-size:13px !important;
-  font-weight:700 !important;
-}
-
-/* Sous-préfectures */
-.css_Sous_prfecture_9.leaflet-tooltip{
-  font-size:14px !important;
-  font-weight:700 !important;
+.leaflet-layerstree-expand-collapse {
+    cursor: pointer;
 }
